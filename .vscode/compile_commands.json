@@ -1,0 +1,6 @@
+[
+{
+  "directory": "/Users/elmer/Desktop/hello_xmake",
+  "arguments": ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++", "-c", "-Qunused-arguments", "-target", "arm64-apple-macos27.2", "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk", "-g", "-O0", "-framework", "AudioToolbox", "-framework", "AVFoundation", "-framework", "CoreAudio", "-framework", "CoreHaptics", "-framework", "CoreMedia", "-framework", "CoreVideo", "-framework", "Foundation", "-framework", "GameController", "-framework", "Metal", "-framework", "QuartzCore", "-framework", "CoreFoundation", "-framework", "UniformTypeIdentifiers", "-framework", "Cocoa", "-framework", "Carbon", "-framework", "ForceFeedback", "-framework", "IOKit", "-isystem", "/Users/elmer/.xmake/packages/l/lua/v5.5.1/35695e053d774454ace542281f0b009c/include/lua", "-isystem", "/Users/elmer/.xmake/packages/l/libsdl3/release-3.4.20/a5b4e345986a4740863d88955955c4b5/include", "-isystem", "/Users/elmer/.xmake/packages/o/opengl-headers/2024.01.04/bbc26f0283d24abdb1a6b19e861376f2/include", "-isystem", "/Users/elmer/.xmake/packages/e/egl-headers/2023.12.16/fd46ac16f3e442c4a79a6b8b9c4e66d4/include", "-o", "build/.objs/hello_xmake/macosx/arm64/debug/src/main.cpp.o", "src/main.cpp"],
+  "file": "src/main.cpp"
+}]
