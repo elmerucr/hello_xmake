@@ -2,15 +2,23 @@ add_rules("mode.debug", "mode.release")
 set_defaultmode("debug")
 
 -- Force static linking and ignore any system-installed dynamic libraries
--- Pull in the latest Lua release
-add_requires("lua 5.5.1", {system = false, configs = {shared = false}})
 -- Pull in SDL 3.4.20 statically from source
 add_requires("libsdl3 release-3.4.20", {system = false, configs = {shared = false}})
 
 target("hello_xmake")
     set_kind("binary")
-    add_files("src/*.cpp") -- or src/*.c
-    add_packages("lua", "libsdl3")
+
+    add_files("src/*.cpp")
+
+	-- Add vendored Lua C sources, excluding standalone CLI entry points
+	add_files("src/lua-5.5.1/src/*.c|lua.c|luac.c")
+    add_includedirs("src/lua-5.5.1/src")
+    -- Enable POSIX features on macOS/Linux (for popen, mkstemp, etc. in Lua's os/io libs)
+    if not is_plat("windows") then
+        add_defines("LUA_USE_POSIX")
+    end
+
+    add_packages("libsdl3")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
