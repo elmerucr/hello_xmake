@@ -5,47 +5,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#define	WIDTH	320
-#define HEIGHT	180
+#include "common.hpp"
+#include "rca.hpp"
+#include "vdc.hpp"
 
-const bool vdc_scanlines = true;
-const uint8_t vdc_scanline_alpha = 0xaa;
-
-// Using Atari GTIA colors of https://lospec.com/palette-list/atari-8-bit-family-gtia
-const uint32_t palette[256] = {
-	0xff000000, 0xff111111, 0xff222222, 0xff333333, 0xff444444, 0xff555555, 0xff666666, 0xff777777,
-	0xff888888, 0xff999999, 0xffaaaaaa, 0xffbbbbbb, 0xffcccccc, 0xffdddddd, 0xffeeeeee, 0xffffffff,
-	0xff190700, 0xff2a1800, 0xff3b2900, 0xff4c3a00, 0xff5d4b00, 0xff6e5c00, 0xff7f6d00, 0xff907e09,
-	0xffa18f1a, 0xffb3a02b, 0xffc3b13c, 0xffd4c24d, 0xffe5d35e, 0xfff7e46f, 0xfffff582, 0xffffff96,
-	0xff310000, 0xff3f0000, 0xff531700, 0xff642800, 0xff753900, 0xff864a00, 0xff975b0a, 0xffa86c1b,
-	0xffb97d2c, 0xffca8e3d, 0xffdb9f4e, 0xffecb05f, 0xfffdc170, 0xffffd285, 0xffffe39c, 0xfffff4b2,
-	0xff420404, 0xff4f0000, 0xff600800, 0xff711900, 0xff822a0d, 0xff933b1e, 0xffa44c2f, 0xffb55d40,
-	0xffc66e51, 0xffd77f62, 0xffe89073, 0xfff9a183, 0xffffb298, 0xffffc3ae, 0xffffd4c4, 0xffffe5da,
-	0xff410103, 0xff50000f, 0xff61001b, 0xff720f2b, 0xff83203c, 0xff94314d, 0xffa5425e, 0xffb6536f,
-	0xffc76480, 0xffd87591, 0xffe986a2, 0xfffa97b3, 0xffffa8c8, 0xffffb9de, 0xffffcaef, 0xfffbdcf6,
-	0xff330035, 0xff440041, 0xff55004c, 0xff660c5c, 0xff771d6d, 0xff882e7e, 0xff993f8f, 0xffaa50a0,
-	0xffbb61b1, 0xffcc72c2, 0xffdd83d3, 0xffee94e4, 0xffffa5e4, 0xffffb6e9, 0xffffc7ee, 0xffffd8f3,
-	0xff1d005c, 0xff2e0068, 0xff400074, 0xff511084, 0xff622195, 0xff7332a6, 0xff8443b7, 0xff9554c8,
-	0xffa665d9, 0xffb776ea, 0xffc887eb, 0xffd998eb, 0xffe9a9ec, 0xfffbbaeb, 0xffffcbef, 0xffffdff9,
-	0xff020071, 0xff13007d, 0xff240b8c, 0xff351c9d, 0xff462dae, 0xff573ebf, 0xff684fd0, 0xff7960e1,
-	0xff8a71f2, 0xff9b82f7, 0xffac93f7, 0xffbda4f7, 0xffceb5f7, 0xffdfc6f7, 0xfff0d7f7, 0xffffe8f8,
-	0xff000068, 0xff000a7c, 0xff081b90, 0xff192ca1, 0xff2a3db2, 0xff3b4ec3, 0xff4c5fd4, 0xff5d70e5,
-	0xff6e81f6, 0xff7f92ff, 0xff90a3ff, 0xffa1b4ff, 0xffb2c5ff, 0xffc3d6ff, 0xffd4e7ff, 0xffe5f8ff,
-	0xff000a4d, 0xff001b63, 0xff002c79, 0xff023d8f, 0xff134ea0, 0xff245fb1, 0xff3570c2, 0xff4681d3,
-	0xff5792e4, 0xff68a3f5, 0xff79b4ff, 0xff8ac5ff, 0xff9bd6ff, 0xfface7ff, 0xffbdf8ff, 0xffceffff,
-	0xff001a26, 0xff002b3c, 0xff003c52, 0xff004d68, 0xff065e7c, 0xff176f8d, 0xff28809e, 0xff3991af,
-	0xff4aa2c0, 0xff5bb3d1, 0xff6cc4e2, 0xff7dd5f3, 0xff8ee6ff, 0xff9ff7ff, 0xffb0ffff, 0xffc1ffff,
-	0xff01250a, 0xff023610, 0xff004622, 0xff005738, 0xff05684d, 0xff16795e, 0xff278a6f, 0xff389b80,
-	0xff49ac91, 0xff5abda2, 0xff6bceb3, 0xff7cdfc4, 0xff8df0d5, 0xff9effe5, 0xffaffff1, 0xffc0fffd,
-	0xff04260d, 0xff043811, 0xff054713, 0xff005a1b, 0xff106b1b, 0xff217c2c, 0xff328d3d, 0xff439e4e,
-	0xff54af5f, 0xff65c070, 0xff76d181, 0xff87e292, 0xff98f3a3, 0xffa9ffb3, 0xffbaffbf, 0xffcbffcb,
-	0xff00230a, 0xff003510, 0xff044613, 0xff155613, 0xff266713, 0xff377813, 0xff488914, 0xff599a25,
-	0xff6aab36, 0xff7bbc47, 0xff8ccd58, 0xff9dde69, 0xffaeef7a, 0xffbfff8b, 0xffd0ff97, 0xffe1ffa3,
-	0xff001707, 0xff0e2808, 0xff1f3908, 0xff304a08, 0xff415b08, 0xff526c08, 0xff637d08, 0xff748e0d,
-	0xff859f1e, 0xff96b02f, 0xffa7c140, 0xffb8d251, 0xffc9e362, 0xffdaf473, 0xffebff82, 0xfffcff8e,
-	0xff1b0701, 0xff2c1801, 0xff3c2900, 0xff4d3b00, 0xff5f4c00, 0xff705e00, 0xff816f00, 0xff938009,
-	0xffa4921a, 0xffb2a02b, 0xffc7b43d, 0xffd8c64e, 0xffead760, 0xfff6e46f, 0xfffffa84, 0xffffff99
-};
+const bool scanlines = true;
+const uint8_t scanlines_alpha = 0xaa;
 
 // Shared state controlled by Lua
 struct AppState {
@@ -56,21 +21,28 @@ struct AppState {
 
 // C++ function exposed to Lua: set_bg_color(r, g, b)
 static int l_set_bg_color(lua_State* L) {
-    AppState* state = static_cast<AppState*>(lua_touserdata(L, lua_upvalueindex(1)));
+    AppState *state = static_cast<AppState*>(lua_touserdata(L, lua_upvalueindex(1)));
     state->r = static_cast<uint8_t>(luaL_checkinteger(L, 1));
     state->g = static_cast<uint8_t>(luaL_checkinteger(L, 2));
     state->b = static_cast<uint8_t>(luaL_checkinteger(L, 3));
     return 0;
 }
 
+// static int l_pset(lua_State *L) {
+// 	uint8_t x = static_cast<uint8_t>(luaL_checkinteger(L, 1));
+// }
+
 inline uint32_t video_blend(uint32_t c0, uint32_t c1) {
 	return
 		((((c0 & 0x00ff00ff) + (c1 & 0x00ff00ff)) >> 1) & 0x00ff00ff) |
 		((((c0 & 0x0000ff00) + (c1 & 0x0000ff00)) >> 1) & 0x0000ff00) |
-		(vdc_scanline_alpha << 24); // alpha
+		(scanlines_alpha << 24); // alpha
 }
 
 int main(int argc, char* argv[]) {
+	vdc_t vdc;
+	vdc.reset();
+
     // 1. Initialize SDL3
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "[SDL] SDL_Init failed: " << SDL_GetError() << "\n";
@@ -83,7 +55,7 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
-	SDL_SetWindowAspectRatio(window, (float)WIDTH/HEIGHT, (float)WIDTH/HEIGHT);
+	SDL_SetWindowAspectRatio(window, (float)PIXELS_PER_SCANLINE/SCANLINES, (float)PIXELS_PER_SCANLINE/SCANLINES);
 	SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
@@ -102,21 +74,26 @@ int main(int argc, char* argv[]) {
 		printf("[SDL] vsync is off\n");
     }
 
-	SDL_SetRenderLogicalPresentation(renderer, WIDTH, HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+	SDL_SetRenderLogicalPresentation(renderer, PIXELS_PER_SCANLINE, SCANLINES, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 	SDL_HideCursor();				// make sure cursor isn't visible
 
-	SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, 2*HEIGHT);
+	SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, PIXELS_PER_SCANLINE, 2*SCANLINES);
 	uint8_t vdc_texture_bytes_per_pixel = (SDL_BITSPERPIXEL(texture->format) >> 3);
 	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_PIXELART);
 	SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_ADD);
 
-	uint32_t *buffer = new uint32_t[WIDTH*HEIGHT];
-
-	for (size_t y=0; y<HEIGHT; y++) {
-		for (size_t x=0; x<WIDTH; x++) {
-			buffer[(WIDTH * y) + x] = palette[(((y % 16) << 4) + x) & 0xff];
+	rca_t rca;
+	for (size_t y=0; y<SCANLINES; y++) {
+		for (size_t x=0; x<PIXELS_PER_SCANLINE; x++) {
+			if (((x - 160)*(x - 160) + (y - 90)*(y - 90)) < 64*64) {
+				vdc.buffer[(PIXELS_PER_SCANLINE * y) + x] = vdc.palette[(((y % 16) << 4) + x) & 0xff];
+			} else {
+				vdc.buffer[(PIXELS_PER_SCANLINE * y) + x] = vdc.palette[rca.byte()];
+			}
 		}
 	}
+
+	vdc.clear(0x93);
 
     // 2. Initialize Lua and register C++ callback
     AppState state;
@@ -130,20 +107,20 @@ int main(int argc, char* argv[]) {
     lua_setglobal(L, "set_bg_color");
 
     // 3. Run an inline Lua script to set initial color and define a key handler
-    const char* lua_script = R"(
+    const char* lua_script = R"lua(
         print("Running " .. _VERSION .. " inside SDL3!")
-		r = 0x08
-		g = 0x08
-		b = 0x08
-        set_bg_color(r, g, b) -- Initial dark grey
+		r = 0
+		g = 0
+		b = 0
+        set_bg_color(r, g, b) -- Initial black
 
         function on_space_pressed()
-			r = r + 0x08; if r == 0x40 then r = 0x00 end
-			g = g + 0x08; if g == 0x40 then g = 0x00 end
-			b = b + 0x08; if b == 0x40 then b = 0x00 end
-            set_bg_color(r, g, b)
+		  r = math.random(0, 255)
+		  g = math.random(0, 255)
+		  b = math.random(0, 255)
+    	  set_bg_color(r, g, b)
         end
-    )";
+    )lua";
 
     if (luaL_dostring(L, lua_script) != LUA_OK) {
         std::cerr << "Lua error: " << lua_tostring(L, -1) << "\n";
@@ -171,21 +148,19 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, state.r, state.g, state.b, 255);
         SDL_RenderClear(renderer);
 
-		//SDL_UpdateTexture(texture, nullptr, (void *)buffer, WIDTH*sizeof(uint32_t));
-
 		void *pixels;
 		int pitch;
 		SDL_LockTexture(texture, nullptr, &pixels, &pitch);
 			pitch /= vdc_texture_bytes_per_pixel;
-			uint32_t *cur_pix_src = buffer;
-			uint32_t *nxt_pix_src = cur_pix_src + WIDTH;
+			uint32_t *cur_pix_src = vdc.buffer;
+			uint32_t *nxt_pix_src = cur_pix_src + PIXELS_PER_SCANLINE;
 			uint32_t *cur_pix_dst = (uint32_t *)pixels;
 			uint32_t *nxt_pix_dst = cur_pix_dst + pitch;
-			for (int y = 0; y < HEIGHT; y++) {
-				if (y == (HEIGHT - 1)) nxt_pix_src = cur_pix_src;
-				for (int x = 0; x < WIDTH; x++) {
+			for (int y = 0; y < SCANLINES; y++) {
+				if (y == (SCANLINES - 1)) nxt_pix_src = cur_pix_src;
+				for (int x = 0; x < PIXELS_PER_SCANLINE; x++) {
 					*cur_pix_dst++ = *cur_pix_src;
-					*nxt_pix_dst++ = vdc_scanlines ? video_blend(*cur_pix_src, *nxt_pix_src) : *cur_pix_src;
+					*nxt_pix_dst++ = scanlines ? video_blend(*cur_pix_src, *nxt_pix_src) : *cur_pix_src;
 					cur_pix_src++;
 					nxt_pix_src++;
 				}
@@ -200,7 +175,6 @@ int main(int argc, char* argv[]) {
 
     // 5. Clean up
     lua_close(L);
-	delete [] buffer;
 	SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
