@@ -51,66 +51,44 @@ public:
 		stat = number;
 	}
 
-	// /*
-	//  * Generates a "random byte", this function currently actually
-	//  * performs two tasks:
-	//  *
-	//  * (1) Shifts internal status according to rule 30 (Wolfram)
-	//  * (2) Outputs part of internal status as 8 bit unsigned integer
-	//  */
-	// uint8_t byte() {
-	// 	/*
-	// 	 * Clean up the left and right side of the ca, make sure
-	// 	 * things are clean before processing
-	// 	 */
-	// 	// TODO: Can't we do this by ANDing with 0b011111..111000??? Probably nicer...
-	// 	stat = (((stat<<1)>>3)<<2);
+	/*
+	 * Generates a "random byte", this function currently actually
+	 * performs two tasks:
+	 *
+	 * (1) Shifts internal status according to rule 30 (Wolfram)
+	 * (2) Outputs part of internal status as 8 bit unsigned integer
+	 */
+	uint8_t byte() {
+		/*
+		 * Clean up the left and right side of the ca, make sure
+		 * things are clean before processing
+		 */
+		// TODO: Can't we do this by ANDing with 0b011111..111000??? Probably nicer...
+		//stat = (((stat<<1)>>3)<<2);
+		stat &= 0x7ffffffc;
 
-	// 	/*
-	// 	 * Need two temporary registers to hold data and combine...
-	// 	 */
-	// 	uint32_t temp1, temp2;
+		/*
+		 * Need two temporary registers to hold data and combine...
+		 */
+		uint32_t temp1, temp2;
 
-	// 	/*
-	// 	 * Make the status has periodic boundary conditions: bit 1 gets a
-	// 	 * copy of bit 30. Bit 31 (leftmost) gets a copy of bit 2.
-	// 	 */
-	// 	temp1 = stat >> 29;
-	// 	temp2 = stat << 29;
-	// 	stat = stat | temp1 | temp2;
+		/*
+		 * Make the status has periodic boundary conditions: bit 1 gets a
+		 * copy of bit 30. Bit 31 (leftmost) gets a copy of bit 2.
+		 */
+		temp1 = stat >> 29;
+		temp2 = stat << 29;
+		stat = stat | temp1 | temp2;
 
-	// 	temp1 = stat >> 1;
-	// 	temp2 = stat << 1;
+		temp1 = stat >> 1;
+		temp2 = stat << 1;
 
-	// 	/*
-	// 	 * The actual rule 30 from Wolfram
-	// 	 */
-	// 	stat = (stat | temp2) ^ temp1;
+		/*
+		 * The actual rule 30 from Wolfram
+		 */
+		stat = (stat | temp2) ^ temp1;
 
-	// 	return (uint8_t)((stat<<8)>>24);
-	// }
-
-	uint8_t byte()
-	{
-    	uint8_t result = 0;
-		for (int i = 0; i < 8; i++) {
-			// 1. Clear boundaries using a mask instead of shifting
-			stat &= 0x7FFFFFFC;
-
-			// 2. Apply periodic boundary conditions
-			uint32_t temp1 = stat >> 29;
-			uint32_t temp2 = stat << 29;
-			stat = stat | temp1 | temp2;
-
-			// 3. Rule 30 logic
-			temp1 = stat >> 1;
-			temp2 = stat << 1;
-			stat = (stat | temp2) ^ temp1;
-
-			// 4. Extract just the middle bit (bit 16) and shift it into our result
-			result = (result << 1) | ((stat >> 16) & 1);
-		}
-    	return result;
+		return (uint8_t)((stat<<8)>>24);
 	}
 
 	/*
