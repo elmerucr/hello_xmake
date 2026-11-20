@@ -39,7 +39,7 @@ public:
         std::memset(buffer.data(), color, buffer.size());
     }
 
-    void blit(uint32_t base_address, int16_t x_dst, int16_t y_dst, uint8_t w_src, uint8_t h_src)
+    void blit(uint32_t base_address, int16_t x_dst, int16_t y_dst, uint8_t w_src, uint8_t h_src, uint8_t index)
     {
         // 1. Early rejection if completely outside the 320x180 screen
         if (w_src <= 0 || h_src <= 0 ||

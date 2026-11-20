@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------
 // rca.hpp
-// lime
+// hydra
 //
-// Copyright © 2012-2025 elmerucr. All rights reserved.
+// Copyright © 2012-2026 elmerucr. All rights reserved.
 // ---------------------------------------------------------------------
 
 // ---------------------------------------------------------------------
@@ -10,6 +10,7 @@
 //
 // 2012-01-21 c version
 // 2013-11-11 c++ version
+// 2026-11-20 64-bit / 1-bit-per-step upgrade (google gemini AI agent)
 // ---------------------------------------------------------------------
 
 #ifndef RCA_HPP
@@ -20,83 +21,74 @@
 class rca_t {
 private:
 	/*
-	 * Will be a 29 cell prng, fits perfectly in a 32 bit register
+	 * 61-cell PRNG inside a 64-bit register.
+	 * Uses bits 2..62 (61 cells, prime width avoids small harmonic sub-cycles).
+	 * Bit 63 (left) and bits 0..1 (right) are used as periodic wrap-around buffers.
 	 */
-	uint32_t stat;
+	uint64_t stat;
+
+	static constexpr uint64_t ACTIVE_MASK = 0x7ffffffffffffffcULL;
+
+	/*
+	 * Advances the cellular automaton by one generation using Wolfram's Rule 30
+	 * and returns the center column bit (bit 32).
+	 */
+	inline uint8_t step() {
+		// Clear wrap-around guard bits
+		stat &= ACTIVE_MASK;
+
+		// Periodic boundary conditions for 61 cells:
+		// Bit 1 gets a copy of bit 62; bit 63 gets a copy of bit 2.
+		uint64_t wrap_right = stat >> 61;
+		uint64_t wrap_left  = stat << 61;
+		stat = stat | wrap_right | wrap_left;
+
+		// Apply Wolfram's Rule 30: next_center = left ^ (center | right)
+		uint64_t right = stat >> 1;
+		uint64_t left  = stat << 1;
+		stat = (stat | right) ^ left;
+
+		// Extract center column (bit 32)
+		return static_cast<uint8_t>((stat >> 32) & 1ULL);
+	}
+
 public:
 	/*
-	 * Default constructor, simple init, turn on 1 bit in the
-	 * "middle column", this bit serves also as the least significant
-	 * bit of the byte that's returned.
+	 * Default constructor: turns on 1 bit in the center column (bit 32).
 	 */
 	rca_t() {
-		/*
-		 * Initial state of the 32bit register (29 bits are used):
-		 *
-		 * |x0000000|00000001|00000000|000000xx|
-		 *
-		 * One bit on the left side and two bits on the right side not
-		 * used.
-		 */
-		stat = (1 << 16);
+		stat = (1ULL << 32);
 	}
 
 	/*
-	 * Alternative constructor,uses an uint32_t for init.
+	 * Alternative constructor: uses a uint64_t seed.
+	 * Falls back to default seed if masked state would be all zeros.
 	 */
-	rca_t(uint32_t number) {
-		/*
-		 * Alternative manual constructor
-		 */
-		stat = number;
+	rca_t(uint64_t number) {
+		stat = number & ACTIVE_MASK;
+		if (stat == 0) {
+			stat = (1ULL << 32);
+		}
 	}
 
 	/*
-	 * Generates a "random byte", this function currently actually
-	 * performs two tasks:
-	 *
-	 * (1) Shifts internal status according to rule 30 (Wolfram)
-	 * (2) Outputs part of internal status as 8 bit unsigned integer
+	 * Generates a random byte by stepping Rule 30 eight times and
+	 * collecting the center column bit on each generation.
 	 */
 	uint8_t byte() {
-		/*
-		 * Clean up the left and right side of the ca, make sure
-		 * things are clean before processing
-		 */
-		// TODO: Can't we do this by ANDing with 0b011111..111000??? Probably nicer...
-		//stat = (((stat<<1)>>3)<<2);
-		stat &= 0x7ffffffc;
-
-		/*
-		 * Need two temporary registers to hold data and combine...
-		 */
-		uint32_t temp1, temp2;
-
-		/*
-		 * Make the status has periodic boundary conditions: bit 1 gets a
-		 * copy of bit 30. Bit 31 (leftmost) gets a copy of bit 2.
-		 */
-		temp1 = stat >> 29;
-		temp2 = stat << 29;
-		stat = stat | temp1 | temp2;
-
-		temp1 = stat >> 1;
-		temp2 = stat << 1;
-
-		/*
-		 * The actual rule 30 from Wolfram
-		 */
-		stat = (stat | temp2) ^ temp1;
-
-		return (uint8_t)((stat<<8)>>24);
+		uint8_t result = 0;
+		for (int i = 0; i < 8; ++i) {
+			result = static_cast<uint8_t>((result << 1) | step());
+		}
+		return result;
 	}
 
 	/*
-	 * Returns status (e.g. to seed another generator), doesn't
-	 * apply rule 30 on internal status.
+	 * Returns current masked status (e.g. to seed another generator)
+	 * without advancing the automaton.
 	 */
-	uint32_t status() {
-		return stat;
+	uint64_t status() const {
+		return stat & ACTIVE_MASK;
 	}
 };
 

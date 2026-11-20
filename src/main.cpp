@@ -1,3 +1,10 @@
+// ---------------------------------------------------------------------
+// main.cpp
+// hydra
+//
+// Copyright © 2026 elmerucr. All rights reserved.
+// ---------------------------------------------------------------------
+
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -6,20 +13,21 @@
 #include <SDL3/SDL_main.h>
 
 #include "common.hpp"
+#include "rca.hpp"
 #include "vdc.hpp"
 
 // 16x16 Heroine with a Sword (0x00 = transparent, 0x01..0x0F = dark to bright greyscale)
-constexpr uint8_t sprite1[16 * 16] = {
+constexpr uint8_t swordmaster[16 * 16] = {
     0x00, 0x00, 0x00, 0x04, 0x05, 0x05, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 0: Top of hair
-    0x00, 0x00, 0x04, 0x07, 0x08, 0x08, 0x07, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, // Row 1: Hair & sword tip
-    0x00, 0x04, 0x0C, 0x0D, 0x0D, 0x0D, 0x0C, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x0F, 0x00, // Row 2: Headband & blade
-    0x00, 0x04, 0x06, 0x0B, 0x0C, 0x0B, 0x0C, 0x06, 0x04, 0x00, 0x00, 0x00, 0x0D, 0x0F, 0x0E, 0x00, // Row 3: Forehead & blade
-    0x00, 0x04, 0x05, 0x0B, 0x01, 0x0B, 0x01, 0x05, 0x04, 0x00, 0x00, 0x0D, 0x0F, 0x0E, 0x00, 0x00, // Row 4: Eyes & blade
-    0x00, 0x03, 0x05, 0x0A, 0x0B, 0x0B, 0x0A, 0x05, 0x03, 0x00, 0x0D, 0x0F, 0x0E, 0x00, 0x00, 0x00, // Row 5: Cheeks & blade
-    0x00, 0x00, 0x03, 0x04, 0x09, 0x09, 0x04, 0x03, 0x00, 0x0D, 0x0F, 0x0E, 0x00, 0x00, 0x00, 0x00, // Row 6: Chin & blade
-    0x00, 0x00, 0x03, 0x07, 0x08, 0x08, 0x07, 0x03, 0x08, 0x0B, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 7: Shoulders & crossguard
-    0x00, 0x02, 0x0A, 0x07, 0x09, 0x09, 0x07, 0x0A, 0x0B, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 8: Arms, tunic & hilt
-    0x00, 0x02, 0x0A, 0x06, 0x08, 0x08, 0x06, 0x0A, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 9: Torso & hands
+    0x00, 0x00, 0x04, 0x07, 0x08, 0x08, 0x07, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, // Row 1: Hair & sword tip
+    0x00, 0x04, 0x0c, 0x0d, 0x0d, 0x0d, 0x0c, 0x06, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x0f, 0x00, // Row 2: Headband & blade
+    0x00, 0x04, 0x06, 0x0b, 0x0c, 0x0b, 0x0c, 0x06, 0x04, 0x00, 0x00, 0x00, 0x0d, 0x0f, 0x0e, 0x00, // Row 3: Forehead & blade
+    0x00, 0x04, 0x05, 0x0b, 0x01, 0x0b, 0x01, 0x05, 0x04, 0x00, 0x00, 0x0d, 0x0f, 0x0e, 0x00, 0x00, // Row 4: Eyes & blade
+    0x00, 0x03, 0x05, 0x0a, 0x0b, 0x0b, 0x0a, 0x05, 0x03, 0x00, 0x0d, 0x0f, 0x0e, 0x00, 0x00, 0x00, // Row 5: Cheeks & blade
+    0x00, 0x00, 0x03, 0x04, 0x09, 0x09, 0x04, 0x03, 0x00, 0x0d, 0x0f, 0x0e, 0x00, 0x00, 0x00, 0x00, // Row 6: Chin & blade
+    0x00, 0x00, 0x03, 0x07, 0x08, 0x08, 0x07, 0x03, 0x08, 0x0b, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 7: Shoulders & crossguard
+    0x00, 0x02, 0x0a, 0x07, 0x09, 0x09, 0x07, 0x0a, 0x0b, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 8: Arms, tunic & hilt
+    0x00, 0x02, 0x0a, 0x06, 0x08, 0x08, 0x06, 0x0a, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 9: Torso & hands
     0x00, 0x00, 0x02, 0x03, 0x04, 0x04, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 10: Belt
     0x00, 0x00, 0x05, 0x07, 0x08, 0x08, 0x07, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 11: Tunic skirt
     0x00, 0x02, 0x05, 0x06, 0x07, 0x07, 0x06, 0x05, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Row 12: Lower tunic
@@ -28,6 +36,7 @@ constexpr uint8_t sprite1[16 * 16] = {
     0x00, 0x01, 0x02, 0x02, 0x00, 0x00, 0x02, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // Row 15: Boot soles
 };
 
+const bool scanlines = true;
 const uint8_t scanlines_alpha = 0xaa;
 
 // Shared state controlled by Lua
@@ -57,7 +66,17 @@ inline uint32_t video_blend(uint32_t c0, uint32_t c1) {
 		(scanlines_alpha << 24); // alpha
 }
 
+
 int main(int argc, char* argv[]) {
+    alignas(64) uint32_t blend_lut[256][256];
+
+    for (int i=0; i<256; i++) {
+        uint32_t c0 = palette[i];
+        for (int j=0; j<256; j++) {
+            blend_lut[i][j] = video_blend(c0, palette[j]);
+        }
+    }
+
 	vdc_t vdc;
 
     // 1. Initialize SDL3
@@ -100,7 +119,7 @@ int main(int argc, char* argv[]) {
 	SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_ADD);
 
 
-    std::memcpy(vdc.ram.data() + 0x30000, sprite1, sizeof(sprite1));
+    std::memcpy(vdc.ram.data() + 0x30000, swordmaster, sizeof(swordmaster));
 
     // 2. Initialize Lua and register C++ callback
     AppState state;
@@ -138,19 +157,20 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event event;
 
-    int16_t x = 0;
-
     typedef struct {
         int x;
         int y;
+        int dx;
+        int dy;
     } pos;
 
-    #include "rca.hpp"
     rca_t rca;
-    pos boel[256];
-    for (int i=0;i<256;i++) {
-        boel[i].x = rca.byte();
-        boel[i].y = rca.byte();
+    pos swordmaster_array[100];
+    for (int i=0;i<100;i++) {
+        swordmaster_array[i].x = rca.byte();
+        swordmaster_array[i].y = rca.byte();
+        swordmaster_array[i].dx = rca.byte() & 0b1 ? 1 : -1;
+        swordmaster_array[i].dy = rca.byte() & 0b1 ? 1 : -1;
     }
 
 
@@ -172,31 +192,52 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         vdc.clear(0x93);
-        for (int i=0; i<256;i++) {
-            vdc.blit(0x30000, boel[i].x, boel[i].y, 16, 16);
+
+        for (int i=0; i<100; i++) {
+            vdc.blit(0x30000, swordmaster_array[i].x, swordmaster_array[i].y, 16, 16, 0);
+            swordmaster_array[i].x += swordmaster_array[i].dx;
+            if (swordmaster_array[i].x < -32 || swordmaster_array[i].x > 320) swordmaster_array[i].dx = -swordmaster_array[i].dx;
+            swordmaster_array[i].y += swordmaster_array[i].dy;
+            if (swordmaster_array[i].y < -32 || swordmaster_array[i].y > 200) swordmaster_array[i].dy = -swordmaster_array[i].dy;
         }
-        vdc.blit(0x30000, x, 12, 16, 16);
-        x++; if (x == 350) x = -20;
 
 		void *pixels;
 		int pitch;
+
 		SDL_LockTexture(texture, nullptr, &pixels, &pitch);
-			pitch /= vdc_texture_bytes_per_pixel;
-			uint8_t *cur_pix_src = vdc.buffer.data();
-			uint8_t *nxt_pix_src = cur_pix_src + PIXELS_PER_SCANLINE;
-			uint32_t *cur_pix_dst = (uint32_t *)pixels;
-			uint32_t *nxt_pix_dst = cur_pix_dst + pitch;
+
+        const int stride = pitch / vdc_texture_bytes_per_pixel;
+        const int row_advance = (stride * 2) - PIXELS_PER_SCANLINE;
+
+        const uint8_t *cur_pix_src = vdc.buffer.data();
+        const uint8_t *nxt_pix_src = cur_pix_src + PIXELS_PER_SCANLINE;
+        uint32_t *cur_pix_dst = static_cast<uint32_t *>(pixels);
+        uint32_t *nxt_pix_dst = cur_pix_dst + stride;
+
+        if (scanlines) {
 			for (int y = 0; y < SCANLINES; y++) {
 				if (y == (SCANLINES - 1)) nxt_pix_src = cur_pix_src;
 				for (int x = 0; x < PIXELS_PER_SCANLINE; x++) {
-					*cur_pix_dst++ = palette[*cur_pix_src];
-					*nxt_pix_dst++ = video_blend(palette[*cur_pix_src], palette[*nxt_pix_src]);
-					cur_pix_src++;
-					nxt_pix_src++;
-				}
-				cur_pix_dst += pitch;
-				nxt_pix_dst += pitch;
+                    const uint8_t idx0 = *cur_pix_src++;
+                    const uint8_t idx1 = *nxt_pix_src++;
+					*cur_pix_dst++ = palette[idx0];
+					*nxt_pix_dst++ = blend_lut[idx0][idx1];
+                }
+				cur_pix_dst += row_advance;
+				nxt_pix_dst += row_advance;
 			}
+        } else {
+            for (int y=0; y < SCANLINES; y++) {
+                for (int x=0; x < PIXELS_PER_SCANLINE; x++) {
+                    const uint32_t c0 = palette[*cur_pix_src++];
+                    *cur_pix_dst++ = c0;
+                    *nxt_pix_dst++ = c0;
+                }
+                cur_pix_dst += row_advance;
+                nxt_pix_dst += row_advance;
+            }
+        }
+
 		SDL_UnlockTexture(texture);
 
 		SDL_RenderTexture(renderer, texture, nullptr, nullptr);
