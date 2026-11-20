@@ -173,6 +173,21 @@ int main(int argc, char* argv[]) {
         swordmaster_array[i].dy = rca.byte() & 0b1 ? 1 : -1;
     }
 
+    for (int i=0; i<64; i++) {
+        vdc.ram[0x000000 + i] = 0x18;
+        vdc.ram[0x000040 + i] = 0x45;
+    }
+    vdc.ram[0x80] = 0;
+    vdc.ram[0x81] = 1;
+    vdc.ram[0x82] = 0;
+    vdc.ram[0x83] = 1;
+    vdc.ram[0x84] = 0;
+    vdc.ram[0x85] = 1;
+    vdc.ram[0x86] = 0;
+    vdc.ram[0x87] = 1;
+    vdc.ram[0x88] = 0;
+
+    uint16_t x=0;
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -194,12 +209,17 @@ int main(int argc, char* argv[]) {
         vdc.clear(0x93);
 
         for (int i=0; i<100; i++) {
-            vdc.blit(0x30000, swordmaster_array[i].x, swordmaster_array[i].y, 16, 16, 0);
+            vdc.blit_sprite(0x30000, swordmaster_array[i].x, swordmaster_array[i].y, 16, 16, 0);
             swordmaster_array[i].x += swordmaster_array[i].dx;
             if (swordmaster_array[i].x < -32 || swordmaster_array[i].x > 320) swordmaster_array[i].dx = -swordmaster_array[i].dx;
             swordmaster_array[i].y += swordmaster_array[i].dy;
             if (swordmaster_array[i].y < -32 || swordmaster_array[i].y > 200) swordmaster_array[i].dy = -swordmaster_array[i].dy;
         }
+
+        vdc.blit_tiles(0x000080, 43, 43, 3, 3, 0, 8, 8);
+        vdc.blit_tiles(0x000080, x, 53, 3, 3, 0x30000, 16, 16, true);
+        x++;
+        if (x==48) x = 0;
 
 		void *pixels;
 		int pitch;

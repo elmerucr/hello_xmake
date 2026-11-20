@@ -1,6 +1,8 @@
 add_rules("mode.debug", "mode.release")
-set_defaultmode("debug")
+set_defaultmode("release")
 set_languages("c++17")
+
+set_optimize("fastest") -- or "aggressive"
 
 -- Force static linking and ignore any system-installed dynamic libraries
 -- Pull in SDL 3.4.20 statically from source
