@@ -11,7 +11,7 @@
 // 2012-01-21 c version
 // 2013-11-11 c++ version
 // 2026-11-20 64-bit / 1-bit-per-step upgrade (google gemini AI agent)
-// 2026-11-21 adding templates 1, 8, 16, 32 
+// 2026-11-21 adding templates for 1, 8, 16 32 bit and range output
 // ---------------------------------------------------------------------
 
 #ifndef RCA_HPP
