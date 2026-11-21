@@ -167,10 +167,10 @@ int main(int argc, char* argv[]) {
     rca_t rca;
     pos swordmaster_array[100];
     for (int i=0;i<100;i++) {
-        swordmaster_array[i].x = rca.byte();
-        swordmaster_array[i].y = rca.byte();
-        swordmaster_array[i].dx = rca.byte() & 0b1 ? 1 : -1;
-        swordmaster_array[i].dy = rca.byte() & 0b1 ? 1 : -1;
+        swordmaster_array[i].x = rca.next_int(0,320-16);
+        swordmaster_array[i].y = rca.next_int(0,320-16);
+        swordmaster_array[i].dx = rca.next_bit() ? 1 : -1;
+        swordmaster_array[i].dy = rca.next_bit() ? 1 : -1;
     }
 
     for (int i=0; i<64; i++) {
@@ -211,9 +211,9 @@ int main(int argc, char* argv[]) {
         for (int i=0; i<100; i++) {
             vdc.blit_sprite(0x30000, swordmaster_array[i].x, swordmaster_array[i].y, 16, 16, 0);
             swordmaster_array[i].x += swordmaster_array[i].dx;
-            if (swordmaster_array[i].x < -32 || swordmaster_array[i].x > 320) swordmaster_array[i].dx = -swordmaster_array[i].dx;
+            if (swordmaster_array[i].x < 1 || swordmaster_array[i].x > (320-16)) swordmaster_array[i].dx = -swordmaster_array[i].dx;
             swordmaster_array[i].y += swordmaster_array[i].dy;
-            if (swordmaster_array[i].y < -32 || swordmaster_array[i].y > 200) swordmaster_array[i].dy = -swordmaster_array[i].dy;
+            if (swordmaster_array[i].y < 1 || swordmaster_array[i].y > (180-16)) swordmaster_array[i].dy = -swordmaster_array[i].dy;
         }
 
         vdc.blit_tilemap(0x000080, 43, 43, 3, 3, 0, 8, 8);

@@ -51,6 +51,14 @@ private:
 		// Extract center column (bit 32)
 		return static_cast<uint8_t>((stat >> 32) & 1ULL);
 	}
+	
+	template <typename T> T collect_bits(int count) {
+		T result = 0;
+		for (int i = 0; i < count; ++i) {
+			result = static_cast<T>((result << 1) | step());
+		}
+		return result;
+	}
 
 public:
 	/*
@@ -72,16 +80,57 @@ public:
 	}
 
 	/*
+	 * Generates a random bit by stepping Rule 30 and
+	 * collecting the center column bit.
+	 */
+	uint8_t next_bit() {
+		return step();
+	}
+
+	/*
 	 * Generates a random byte by stepping Rule 30 eight times and
 	 * collecting the center column bit on each generation.
 	 */
-	uint8_t byte() {
-		uint8_t result = 0;
-		for (int i = 0; i < 8; ++i) {
-			result = static_cast<uint8_t>((result << 1) | step());
-		}
-		return result;
+	uint8_t next_byte() {
+		return collect_bits<uint8_t>(8);
 	}
+
+	/*
+	 * Generates a random 16-bit unsigned integer by collecting 16 bits.
+	 */
+	uint16_t next_u16() {
+		return collect_bits<uint16_t>(16);
+	}
+
+	/*
+	 * Generates a random 32-bit unsigned integer by collecting 32 bits.
+	 */
+	uint32_t next_u32() {
+		return collect_bits<uint32_t>(32);
+	}
+
+	/*
+	 * Generates a uniform random int32_t in [min, up).
+	 * If min >= up, returns min.
+	 */
+	int32_t next_int(int32_t min, int32_t up) {
+		if (min >= up) {
+			return min;
+		}
+
+		// Compute span in unsigned 64-bit so even [INT32_MIN, INT32_MAX] cannot overflow
+		const uint64_t span = static_cast<uint64_t>(up) - static_cast<uint64_t>(min);
+
+		// Rejection sampling over 32-bit draws to eliminate modulo bias
+		const uint64_t limit = (1ULL << 32) - ((1ULL << 32) % span);
+		uint32_t r = 0;
+		do {
+			r = next_u32();
+		} while (static_cast<uint64_t>(r) >= limit);
+
+		const uint32_t offset = static_cast<uint32_t>(static_cast<uint64_t>(r) % span);
+		return static_cast<int32_t>(static_cast<uint64_t>(min) + offset);
+	}	
 
 	/*
 	 * Returns current masked status (e.g. to seed another generator)
