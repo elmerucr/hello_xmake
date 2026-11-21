@@ -8,7 +8,7 @@ set_optimize("fastest") -- or "aggressive"
 -- Pull in SDL 3.4.20 statically from source
 add_requires("libsdl3 release-3.4.20", {system = false, configs = {shared = false}})
 
-target("hello_xmake")
+target("hydra")
     set_kind("binary")
 
     add_files("src/*.cpp")

@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("SDL3 + Lua 5.5", 960, 540, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("hydra (SDL3 + Lua 5.5)", 960, 540, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
     if (!window) {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << "\n";
         SDL_Quit();
@@ -216,8 +216,8 @@ int main(int argc, char* argv[]) {
             if (swordmaster_array[i].y < -32 || swordmaster_array[i].y > 200) swordmaster_array[i].dy = -swordmaster_array[i].dy;
         }
 
-        vdc.blit_tiles(0x000080, 43, 43, 3, 3, 0, 8, 8);
-        vdc.blit_tiles(0x000080, x, 53, 3, 3, 0x30000, 16, 16, true);
+        vdc.blit_tilemap(0x000080, 43, 43, 3, 3, 0, 8, 8);
+        vdc.blit_tilemap(0x000080, x, 53, 3, 3, 0x30000, 16, 16, true);
         x++;
         if (x==48) x = 0;
 
