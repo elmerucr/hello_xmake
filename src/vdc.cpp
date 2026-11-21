@@ -17,7 +17,9 @@ void vdc_t::blit_sprite(
     int16_t  dst_y,
     uint8_t  sprite_w,
     uint8_t  sprite_h,
-    uint8_t  sprite_id
+    uint8_t  sprite_id,
+    bool     flip_x,
+    bool     flip_y
 )
 {
     // 1. Early rejection if completely outside the 320x180 screen
@@ -60,38 +62,59 @@ void vdc_t::blit_sprite(
     }
 
     // 4. Fast pointer-based scanline loop
-    const uint8_t* __restrict src_row = ram.data() + gfx_addr + (src_y * sprite_w) + src_x;
+    const int src_start_y = flip_y ? (src_y + h_clip - 1) : src_y;
+    const int src_y_step  = flip_y ? -static_cast<int>(sprite_w) : static_cast<int>(sprite_w);
+
+    const uint8_t* __restrict src_row = ram.data() + gfx_addr + (src_start_y * sprite_w);
     uint8_t* __restrict dst_row = buffer.data() + (dst_y * PIXELS_PER_SCANLINE) + dst_x;
-    
-    for (int y = 0; y < h_clip; ++y) {
-        int x = 0;
 
-        // Skip 8 transparent pixels at once when possible
-        for (; x <= w_clip - 8; x += 8) {
-            uint64_t chunk;
-            std::memcpy(&chunk, src_row + x, sizeof(uint64_t));
-            if (chunk == 0) {
-                continue;
-            }
+    if (!flip_x) {
+        src_row += src_x;
 
-            for (int i = 0; i < 8; ++i) {
-                uint8_t val = src_row[x + i];
-                if (val) {
-                    dst_row[x + i] = val;
+        for (int y = 0; y < h_clip; ++y) {
+            int x = 0;
+
+            // Skip 8 transparent pixels at once when possible
+            for (; x <= w_clip - 8; x += 8) {
+                uint64_t chunk;
+                std::memcpy(&chunk, src_row + x, sizeof(uint64_t));
+                if (chunk == 0) {
+                    continue;
+                }
+
+                for (int i = 0; i < 8; ++i) {
+                    uint8_t val = src_row[x + i];
+                    if (val) {
+                        dst_row[x + i] = val;
+                    }
                 }
             }
-        }
 
-        // Remaining 0..7 pixels
-        for (; x < w_clip; ++x) {
-            uint8_t val = src_row[x];
-            if (val) {
-                dst_row[x] = val;
+            // Remaining 0..7 pixels
+            for (; x < w_clip; ++x) {
+                uint8_t val = src_row[x];
+                if (val) {
+                    dst_row[x] = val;
+                }
             }
-        }
 
-        src_row += sprite_w;
-        dst_row += PIXELS_PER_SCANLINE;
+            src_row += src_y_step;
+            dst_row += PIXELS_PER_SCANLINE;
+        }
+    } else {
+        const int flip_start = src_x + w_clip - 1;
+
+        for (int y = 0; y < h_clip; ++y) {
+            for (int x = 0; x < w_clip; ++x) {
+                uint8_t val = src_row[flip_start - x];
+                if (val) {
+                    dst_row[x] = val;
+                }
+            }
+
+            src_row += src_y_step;
+            dst_row += PIXELS_PER_SCANLINE;
+        }
     }
 }
 
@@ -184,7 +207,7 @@ void vdc_t::blit_tilemap(
                 }
             } else {
                 // Edge tiles fall back to standard clipped blit
-                blit_sprite(tileset_addr, px, py, tile_w, tile_h, tile_id);
+                blit_sprite(tileset_addr, px, py, tile_w, tile_h, tile_id, false, false);
             }
         }
     }

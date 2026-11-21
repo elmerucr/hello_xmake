@@ -15,19 +15,6 @@
 
 #include "common.hpp"
 
-typedef struct {
-        uint32_t gfx_addr;
-        int16_t  dst_x;
-        int16_t  dst_y;
-        uint8_t  sprite_w;
-        uint8_t  sprite_h;
-        uint8_t  sprite_id;
-} sprite_t;
-
-typedef struct {
-
-} tilemap_t;
-
 class vdc_t {
 public:
     alignas(64) std::array<uint8_t, PIXELS_PER_SCANLINE * SCANLINES> buffer;
@@ -43,7 +30,9 @@ public:
         int16_t  dst_y,
         uint8_t  sprite_w,
         uint8_t  sprite_h,
-        uint8_t  sprite_id
+        uint8_t  sprite_id,
+        bool     flip_x,
+        bool     flip_y
     );
 
     void blit_tilemap(
